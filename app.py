@@ -3,7 +3,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import  sessionmaker
 import uuid
 
+# Define the SQLite database URL
+DATABASE_URL = "sqlite:///socialdb.db"
 
+# Create an engine that connects to the SQLite database
+engine = create_engine(DATABASE_URL, echo=True)
+
+# Create a declarative base class to define models
 Base = declarative_base()
 
 
@@ -35,40 +41,44 @@ class posts(Base):
       self.userID = userID
       self.postContent = postContent
       
-      
-    
-# create a sqlite database connection
-
-db = "sqlite:///socialdb.db"
-engine = create_engine(db)
-
-# create tables for social database
-Base.metadata.create_all(bind=engine)
 
 
-# create session for each user to be able to enteract with tables   
+# Create all the tables in the database
+Base.metadata.create_all(engine)
 
-Session = sessionmaker(bind=engine)
+# Create a session factory
+Session = sessionmaker(bind=engine, future=True)
+
 session = Session()
 
 
-# create user
+# function to add user in database
 
-firstName = "kitindi"
-lastName = "Tech"
-profileName ="dax"
-email = "daxtech@gmail.com"
 
-user = users(firstName, lastName, profileName, email)
+def addUser( firstName, lastName, profileName,email,  session,):
+    # chech if the user exists
+    
+    exist = session.query(users).filter(users.email == email).all()
+    
+    if len(exist) > 0:
+        print("User already exists")
+    else:
+        user = users(firstName, lastName,profileName, email, )
+        session.add(user)
+        session.commit()
+        print("User added to the database")
 
-session.add(user) #staging are
-session.commit()
+# function to add a post to the database
 
-# create a post
+def addPost(userID,postContent,session, ):
+    newPost = posts(userID, postContent)
+    session.add(newPost)
+    session.commit()
+    print("Post added to the database")
+    
 
-userID = ""
-postContent ="Nice course"
-
-newPost = posts(userID, postContent)
-session.add(newPost)
-session.commit()
+firstName ="Alexander"
+lastName ="Johson"
+email = "alexjony@gmail.com"
+profileName = "alexis"
+addUser(firstName, lastName, profileName, email, session)
